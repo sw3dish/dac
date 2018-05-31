@@ -1,0 +1,15 @@
+version: '3'
+services:
+  app:
+    build: ./app
+    environment:
+      - "SPOTIPY_CLIENT_ID=<client_id>"
+      - "SPOTIPY_CLIENT_SECRET=<client_secret>"
+      - "SPOTIPY_REDIRECT_URI=http://localhost/"
+      - "SPOTIFY_USERNAME=<spotify_username>"
+      - "TIDAL_USERNAME=<tidal_username>"
+      - "TIDAL_PASSWORD=<tidal_password>"
+      - "DISCOGS_USER_TOKEN=<discogs_token>"
+    volumes:
+      - /vagrant/app:/srv/www
+      - /var/log:/var/log

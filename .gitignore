@@ -7,3 +7,6 @@
 
 # Spotify cache
 *.cache*
+
+# Docker-compose file (Don't leak your tokens!)
+docker-compose.yml
