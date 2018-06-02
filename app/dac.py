@@ -31,7 +31,8 @@ TIDAL_PASSWORD = os.environ["TIDAL_PASSWORD"]
 def convert_spotify(nearness):
     added = []
     not_found = []
-    wantlist = []
+    wantlist_names = []
+    wantlist_ids = []
     choices = {}
 
     # set up Spotify API
@@ -53,7 +54,11 @@ def convert_spotify(nearness):
     num_pages = me.wantlist.pages
     for i in range(1, num_pages + 1):
         for want in me.wantlist.page(i):
-            wantlist.append(want.release.artists[0].name.upper() + " - " + want.release.title.upper())
+            artist_string = ""
+            for artist in want.release.artists:
+                artist_string += artist.name + " "
+            wantlist_names.append(artist_string.upper() + " - " + want.release.title.upper())
+            wantlist_ids.append(want.release.id)
 
     # Grab all saved albums from user
     spotify_results = spotify.current_user_saved_albums()
@@ -68,28 +73,33 @@ def convert_spotify(nearness):
         # used for Discogs search
         # Strip non-numeric characters, remove parenthesis and their contents
         formatted_album_name = re.sub('[^ a-zA-Z0-9]', '', album_name)
-        artist_name = album['album']['artists'][0]['name']
+        artist_name = ""
+        for artist in album['album']['artists']:
+            artist_name += artist["name"] + " "
         title_name = artist_name + " - " + album_name
 
-        if title_name.upper() not in wantlist:
-            discogs_results = discogs.search(formatted_album_name, type='release')
-            # If there are more than 2 pages of results, we need to narrow the search parameters
-            if discogs_results.pages > 2:
-                discogs_results = discogs_results = discogs.search(formatted_album_name, type='release', artist=artist_name)
-            # Get the first 100 results (hopefully this is enough)
-            for result in discogs_results.page(0):
-                choices[result.title] = result.id
-            # Get the closest matching result
-            nearest = process.extractOne(title_name, choices.keys(), scorer=fuzz.token_sort_ratio)
-            # Make sure the closest matching result meets our nearness parameter
-            if nearest and nearest[1] > nearness:
-                me.wantlist.add(choices[nearest[0]])
-                added.append(nearest[0])
-            else:
-                not_found.append(title_name)
-            choices = {}
-            # sleep to throttle requests to Discogs
-            time.sleep(3)
+        if title_name.upper() not in wantlist_names:
+            wantlist_nearest = process.extractOne(title_name, wantlist_names, scorer=fuzz.token_sort_ratio)
+            if not wantlist_names or wantlist_nearest and wantlist_nearest[1] < 80:
+                discogs_results = discogs.search(formatted_album_name, type='release')
+                # If there are more than 2 pages of results, we need to narrow the search parameters
+                if discogs_results.pages > 3:
+                    discogs_results = discogs_results = discogs.search(formatted_album_name, type='release', artist=artist_name)
+                # Get the first 100 results (hopefully this is enough)
+                for result in discogs_results.page(0):
+                    choices[result.title] = result.id
+                # Get the closest matching result
+                nearest = process.extractOne(title_name, choices.keys(), scorer=fuzz.token_sort_ratio)
+                # Make sure the closest matching result meets our nearness parameter
+                if nearest and nearest[1] > nearness:
+                    if choices[nearest[0]] not in wantlist_ids:
+                        me.wantlist.add(choices[nearest[0]])
+                        added.append(nearest[0])
+                else:
+                    not_found.append(title_name)
+                choices = {}
+                # sleep to throttle requests to Discogs
+                time.sleep(3)
 
     # Let the user know what was added/not found
     if added:
