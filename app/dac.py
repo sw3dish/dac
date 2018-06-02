@@ -25,6 +25,7 @@ TIDAL_PASSWORD = os.environ["TIDAL_PASSWORD"]
 
 
 def convert_spotify():
+def convert_spotify(nearness):
     spotify_scope = 'user-library-read'
     spotify_token = util.prompt_for_user_token(SPOTIFY_USERNAME, spotify_scope)
     if not spotify_token:
@@ -71,6 +72,10 @@ def main():
     group.add_argument("-t", "--tidal",
                        help="convert from tidal favorite albums",
                        action="store_true")
+    parser.add_argument("-n", "--nearness",
+                        help="Level of nearness needed to match albums: 0 - 100",
+                        action="store",
+                        default=80)
     args = parser.parse_args()
 
     if args.spotify:
@@ -78,7 +83,7 @@ def main():
               "Please wait as your saved albums are saved to your wantlist" +
               bcolors.ENDC)
         print("This will take a while due to Discogs limitations")
-        convert_spotify()
+        convert_spotify(args.nearness)
     elif args.tidal:
         print(bcolors.OKBLUE +
               "Please wait as your favorite albums "
