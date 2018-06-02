@@ -1,3 +1,4 @@
+import sys
 import os
 import argparse
 import time
@@ -25,13 +26,15 @@ TIDAL_PASSWORD = os.environ["TIDAL_PASSWORD"]
 
 def convert_spotify():
     spotify_scope = 'user-library-read'
+    spotify_token = util.prompt_for_user_token(SPOTIFY_USERNAME, spotify_scope)
+    if not spotify_token:
+        print("Could not authenticate with Spotify")
+        sys.exit()
+    spotify = spotipy.Spotify(auth=spotify_token)
     discogs = discogs_client.Client('DAC/0.1', user_token=DISCOGS_USER_TOKEN)
     not_found = []
     me = discogs.identity()
 
-    spotify_token = util.prompt_for_user_token(SPOTIFY_USERNAME, spotify_scope)
-    if spotify_token:
-        spotify = spotipy.Spotify(auth=spotify_token)
         spotify_results = spotify.current_user_saved_albums()
         # Grab all saved albums from user
         albums = spotify_results['items']
@@ -49,8 +52,6 @@ def convert_spotify():
                 print('Album not found!')
             # sleep to throttle requests to Discogs
             time.sleep(3)
-    else:
-        print("Could not authenticate with Spotify")
     print(bcolors.FAIL + "The following albums were not found:" + bcolors.ENDC)
     for nf in not_found:
         print(nf)
