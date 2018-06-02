@@ -1,7 +1,8 @@
-# DAC
-Convert your digital music libraries to a Discogs wantlist. This is a
-rudimentary command-line client -- a web interface that will be much easier to
-use is coming.
+# dac
+dac stands for Digital-to-Analog Converter, though not in the typical sense.
+It allows you to convert your digital music libraries to a Discogs(analog) wantlist.
+This is a rudimentary command-line client -- a web interface that will be much
+easier to use is coming.
 
 ## Prerequisites
 - Vagrant
@@ -49,14 +50,23 @@ vagrant up
         docker exec -it vagrant_app_1 /bin/bash
         ```
 
-    - Run the command-line client, specifying the service desired
+    - Run the command-line client, specifying the service desired,
+    and a nearness parameter, if the default of 80 is too strict/loose
 
         ```
-        python dac.py (-s | -t)
+        python dac.py (-s | -t) [-n]
         ```
 - If any albums cannot be saved to your wantlist, they will listed after
 all other albums have been added
 
+## Notes
+- Special editions/versions may be stripped
+- Versions of albums not on Discogs will not be added
+- Discogs is a user-submitted site, so some album/artists names may have
+different symbols than in Spotify
+
+## TODO:
+- Allow users to specify which format they want to default to i.e. CD, 12"
 
 ## Built With
 - [Discogs Python API](https://github.com/discogs/discogs_client) -
@@ -65,6 +75,8 @@ Official Discogs Python API
 Spotify Python API
 - [tidalapi](https://pythonhosted.org/tidalapi/#) -
 Unofficial Tidal Python API
+- [fuzzywuzzy](https://github.com/seatgeek/fuzzywuzzy) - SeatGeek's fuzzy
+string matching
 
 ## License
 This project is licensed under the MIT license -
